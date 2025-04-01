@@ -297,7 +297,42 @@ ComboBox {
     }
  
     
-    function tabNotes(notes, text) {
+    function tabNotes(tuning, notes, text) {
+        var harpkey = keylist.key
+        console.log("harpkey set to  " + keylist.key)
+
+        for (var i = 0; i < notes.length; i++) {
+
+            if ( i > 0 )
+                text.text = sep + text.text;
+
+			if( notes[i].tieBack != null )
+				continue
+				
+            if (typeof notes[i].pitch === "undefined") // just in case
+                return
+            var tab = tuning[notes[i].pitch - harpkey];
+            if (typeof tab === "undefined")
+                text.text = "+X";
+            else {
+                if (bendChar !== "b")
+                    tab = tab.replace(/b/g, bendChar);
+                text.text = tab + text.text;
+                }
+        }
+    }
+
+    function applyToSelection(func) {
+        if (typeof curScore === 'undefined')
+            quit();
+				
+        var cursor = curScore.newCursor();
+        var startStaff;
+        var endStaff;
+        var endTick;
+        var fullScore = false;
+
+        var textposition = (placetext.position === "above" ? Placement.ABOVE : Placement.BELOW);
 
         var richter = ["+1",  "-1b",  "-1", "+1o", "+2",  "-2bb",   "-2b",  "-2",   "-3bbb", "-3bb",  "-3b",   "-3",
         "+4",   "-4b",  "-4", "+4o", "+5",  "-5",     "+5o",  "+6",   "-6b",   "-6",    "+6o",   "-7",
@@ -393,38 +428,6 @@ ComboBox {
             default: tuning = richter; break;
         }
 
-        var harpkey = keylist.key
-        console.log("harpkey set to  " + keylist.key)
-
-        for (var i = 0; i < notes.length; i++) {
-
-            if ( i > 0 )
-                text.text = sep + text.text;
-
-            if (typeof notes[i].pitch === "undefined") // just in case
-                return
-            var tab = tuning[notes[i].pitch - harpkey];
-            if (typeof tab === "undefined")
-                text.text = "X";
-            else {
-                if (bendChar !== "b")
-                    tab = tab.replace(/b/g, bendChar);
-                text.text = tab + text.text;
-                }
-        }
-    }
-
-    function applyToSelection(func) {
-        if (typeof curScore === 'undefined')
-            quit();
-        var cursor = curScore.newCursor();
-        var startStaff;
-        var endStaff;
-        var endTick;
-        var fullScore = false;
-
-        var textposition = (placetext.position === "above" ? Placement.ABOVE : Placement.BELOW);
-
         cursor.rewind(1);
         if (!cursor.segment) { // no selection
             fullScore = true;
@@ -463,7 +466,7 @@ ComboBox {
                             for (var i = 0; i < graceChords.length; i++) {
                                 // iterate through all grace chords
                                 var notes = graceChords[i].notes;
-                                tabNotes(notes, text);
+                                tabNotes(tuning, notes, text);
                                 // TODO: deal with placement of grace note on the x axis
                                 text.placement = textposition
                                 text.offset = Qt.point(-2 * (graceChords.length - i), 0)
@@ -474,7 +477,7 @@ ComboBox {
                             }
 
                             var notes = cursor.element.notes;
-                            tabNotes(notes, text);
+                            tabNotes(tuning, notes, text);
                             text.placement = textposition
 
                             cursor.add(text);
