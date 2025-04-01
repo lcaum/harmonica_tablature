@@ -125,6 +125,7 @@ MuseScore {
         ListElement { text: "F"; harpkey: 65 }
         ListElement { text: "F#"; harpkey: 66 }
         ListElement { text: "High G"; harpkey: 67 }
+		ListElement { text: "<Clean>"; harpkey: -1 }
     }
 
     textRole: "text"
@@ -325,7 +326,21 @@ ComboBox {
     function applyToSelection(func) {
         if (typeof curScore === 'undefined')
             quit();
-				
+		
+		var harpkey = keylist.key
+		// clean based on text beginning by '+' '-'
+		if (harpkey == -1){
+			var selectedElementsArray = curScore.selection.elements;
+			for (var i = 0; i < selectedElementsArray.length; i++) {
+				var e = selectedElementsArray[i]
+				if (e && ((e.type == Element.STAFF_TEXT) || (e.type == Element.LYRICS))) {
+					if (e.text[0] == '+' || e.text[0] == '-')
+						removeElement(e);
+				}
+			}
+			return
+		}
+		
         var cursor = curScore.newCursor();
         var startStaff;
         var endStaff;
